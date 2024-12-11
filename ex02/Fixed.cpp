@@ -1,73 +1,183 @@
 #include "Fixed.hpp"
 
-//CONSTRUCTORS
-Fixed::Fixed()
+// CONSTRUCTORES
+Fixed::Fixed() : _fixed_point(0) // Inicialización con lista de miembros
 {
-    _fixed_point = 0;
-    std::cout << "Default constructor called" << std::endl;
+    //std::cout << "Default constructor called" << std::endl;
 }
 
-Fixed::Fixed(const Fixed &copy)
+Fixed::Fixed(const Fixed &copy) : _fixed_point(copy._fixed_point) // Constructor de copia con inicialización
 {
-    std::cout << "Cpy constructor called" << std::endl;
-    *this = copy;
+    //std::cout << "Copy constructor called" << std::endl;
 }
 
 Fixed::Fixed(const int number)
 {
-    std::cout << "Int constructor called" << std::endl;
-    _fixed_point = number << _bit;
+    //std::cout << "Int constructor called" << std::endl;
+    _fixed_point = number << _bit; // Conversión de entero a punto fijo
 }
 
 Fixed::Fixed(const float number)
 {
-    std::cout << "Float constructor called" << std::endl;
-    _fixed_point = roundf(number * (1 << _bit));
+    //std::cout << "Float constructor called" << std::endl;
+    _fixed_point = roundf(number * (1 << _bit)); // Conversión de flotante a punto fijo
 }
 
-//OPERATOR
-Fixed& Fixed::operator=(const Fixed &other)
-{
-    std::cout << "Cpy assignment operator called" << std::endl;
-    this->_fixed_point = other.getRawBits();
-    return(*this);
-}
-
-//DESTRUCTOR
+// DESTRUCTOR
 Fixed::~Fixed()
 {
-    std::cout << "Destructor caller" << std::endl;
+    //std::cout << "Destructor called" << std::endl;
 }
 
-//FUNTION BIT
-void    Fixed::setRawBits(int const raw)
+// OPERADOR DE ASIGNACIÓN
+Fixed& Fixed::operator=(const Fixed &other)
+{
+    //std::cout << "Copy assignment operator called" << std::endl;
+    if (this != &other) // Evitar autoasignación
+    {
+        this->_fixed_point = other._fixed_point;
+    }
+    return *this;
+}
+
+// MÉTODOS GET/SET
+int Fixed::getRawBits() const
+{
+    return _fixed_point;
+}
+
+void Fixed::setRawBits(int const raw)
 {
     _fixed_point = raw;
 }
 
-int Fixed::getRawBits(void) const
+// MÉTODOS DE CONVERSIÓN
+float Fixed::toFloat() const
 {
-    return(_fixed_point);
+    return static_cast<float>(_fixed_point) / (1 << _bit);
 }
 
-// CONVERT
-float   Fixed::toFloat( void ) const
+int Fixed::toInt() const
 {
-    return(float) _fixed_point / (float)(1 << _bit);
+    return _fixed_point >> _bit;
 }
 
-int     Fixed::toInt( void ) const
+// SOBRECARGA DEL OPERADOR DE SALIDA
+std::ostream& operator<<(std::ostream &o, const Fixed &fixed)
 {
-    return(int)(_fixed_point >> _bit);
+    o << fixed.toFloat();
+    return o;
 }
 
-std::ostream&	operator<<(std::ostream &o, const Fixed &fixed) 
+// OPERADORES DE COMPARACIÓN
+bool Fixed::operator>(const Fixed &other) const
 {
-	o << fixed.toFloat();
-	return o;
+    return _fixed_point > other._fixed_point;
 }
 
-bool Fixed::operator>(const Fixed &other)
+bool Fixed::operator<(const Fixed &other) const
 {
-    return (this->_fixed > other._fixed_point)
+    return _fixed_point < other._fixed_point;
+}
+
+bool Fixed::operator>=(const Fixed &other) const
+{
+    return _fixed_point >= other._fixed_point;
+}
+
+bool Fixed::operator<=(const Fixed &other) const
+{
+    return _fixed_point <= other._fixed_point;
+}
+
+bool Fixed::operator==(const Fixed &other) const
+{
+    return _fixed_point == other._fixed_point;
+}
+
+bool Fixed::operator!=(const Fixed &other) const
+{
+    return _fixed_point != other._fixed_point;
+}
+
+// OPERADORES ARITMÉTICOS
+Fixed Fixed::operator+(const Fixed &other) const
+{
+    Fixed result;
+    result.setRawBits(this->_fixed_point + other._fixed_point);
+    return result;
+}
+
+Fixed Fixed::operator-(const Fixed &other) const
+{
+    Fixed result;
+    result.setRawBits(this->_fixed_point - other._fixed_point);
+    return result;
+}
+
+Fixed Fixed::operator*(const Fixed &other) const
+{
+    Fixed result;
+    result.setRawBits((this->_fixed_point * other._fixed_point) >> _bit);
+    return result;
+}
+
+Fixed Fixed::operator/(const Fixed &other) const
+{
+    if (other._fixed_point == 0)
+    {
+        std::cerr << "Error: Division by zero" << std::endl;
+        return Fixed();
+    }
+    Fixed result;
+    result.setRawBits((this->_fixed_point << _bit) / other._fixed_point);
+    return result;
+}
+
+// OPERADORES DE INCREMENTO Y DECREMENTO
+Fixed& Fixed::operator++() // Pre-incremento
+{
+    ++_fixed_point;
+    return *this;
+}
+
+Fixed Fixed::operator++(int) // Post-incremento
+{
+    Fixed temp(*this);
+    ++_fixed_point;
+    return temp;
+}
+
+Fixed& Fixed::operator--() // Pre-decremento
+{
+    --_fixed_point;
+    return *this;
+}
+
+Fixed Fixed::operator--(int) // Post-decremento
+{
+    Fixed temp(*this);
+    --_fixed_point;
+    return temp;
+}
+
+// MÉTODOS ESTÁTICOS PARA MIN Y MAX
+Fixed& Fixed::min(Fixed &x, Fixed &y)
+{
+    return (x < y) ? x : y;
+}
+
+const Fixed& Fixed::min(const Fixed &x, const Fixed &y)
+{
+    return (x < y) ? x : y;
+}
+
+Fixed& Fixed::max(Fixed &x, Fixed &y)
+{
+    return (x > y) ? x : y;
+}
+
+const Fixed& Fixed::max(const Fixed &x, const Fixed &y)
+{
+    return (x > y) ? x : y;
 }
